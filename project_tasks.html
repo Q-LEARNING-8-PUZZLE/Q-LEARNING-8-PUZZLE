@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlog del Proyecto: Agente Q-Learning para 8-Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        #dragonCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            background: rgba(26, 26, 46, 0.85);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(255, 107, 107, 0.5);
+            border-bottom: 3px solid #ff6b6b;
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            color: #4ecdc4;
+            font-size: 1.8em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 5px solid #4ecdc4;
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: #ffe66d;
+            font-size: 1.4em;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        h4 {
+            color: #95e1d3;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .team-structure {
+            background: rgba(78, 205, 196, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .team-structure ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .team-structure li {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+
+        .team-structure li:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .team-structure strong {
+            color: #ffe66d;
+        }
+
+        .epic {
+            background: rgba(255, 107, 107, 0.1);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .task {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 3px solid #95e1d3;
+            transition: all 0.3s;
+        }
+
+        .task:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-id {
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .difficulty {
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .difficulty.low {
+            color: #51cf66;
+        }
+
+        .difficulty.medium {
+            color: #ffe66d;
+        }
+
+        .difficulty.high {
+            color: #ff6b6b;
+        }
+
+        .description {
+            margin: 15px 0;
+            color: #d0d0d0;
+        }
+
+        .criteria {
+            margin-top: 15px;
+            padding-left: 20px;
+        }
+
+        .criteria li {
+            margin: 8px 0;
+            color: #c0c0c0;
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 20px;
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ffe66d;
+            font-family: 'Courier New', monospace;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            margin: 30px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dragonCanvas"></canvas>
+    
+    <div class="container">
+        <h1>🐉 Backlog del Proyecto: Agente Q-Learning para 8-Puzzle</h1>
+        
+        <p style="text-align: center; margin-bottom: 30px; color: #b0b0b0;">
+            Este documento define las tareas necesarias para completar el proyecto, organizadas como "Issues" de GitHub. 
+            Las tareas están distribuidas para un equipo de 4 personas, cubriendo desde la lógica del juego hasta el análisis final.
+        </p>
+
+        <div class="team-structure">
+            <h2>👥 Estructura del Equipo (Sugerida)</h2>
+            <ul>
+                <li><strong>Dev 1 - Environment:</strong> Encargado de la lógica del puzzle, generación de estados y validación de movimientos.</li>
+                <li><strong>Dev 2 - Agent:</strong> Encargado de la implementación del algoritmo Q-Learning y la política de decisiones.</li>
+                <li><strong>Dev 3 - Trainer:</strong> Encargado del bucle principal de entrenamiento y ajuste de hiperparámetros.</li>
+                <li><strong>Dev 4 - Analyst:</strong> Encargado de la recolección de métricas, visualización de datos y redacción del informe.</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <h2>📋 Listado de Tareas (Issues)</h2>
+
+        <div class="epic">
+            <h3>Epic 1: Configuración del Entorno (Environment)</h3>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-01]</span>
+                    <span class="difficulty medium">⭐⭐ (Medio)</span>
+                </div>
+                <h4>Implementación de la Estructura del Tablero y Estados</h4>
+                <p><strong>Asignado a:</strong> Dev 1</p>
+                <p class="description"><strong>Descripción:</strong> Definir la estructura de datos para representar el tablero de 3x3. Implementar la función para generar el estado objetivo (1,2,3,4,5,6,7,8,0).</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Representación clara del estado (ej. matriz o array).</li>
+                        <li>Función para detectar si un estado es el objetivo.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-02]</span>
+                    <span class="difficulty medium">⭐⭐ (Medio)</span>
+                </div>
+                <h4>Lógica de Movimientos y Transiciones</h4>
+                <p><strong>Asignado a:</strong> Dev 1</p>
+                <p class="description"><strong>Descripción:</strong> Implementar las 4 acciones posibles (Arriba, Abajo, Izquierda, Derecha) para el espacio vacío. Validar límites del tablero para evitar movimientos ilegales.</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Función <code>step(action)</code> que devuelve el nuevo estado.</li>
+                        <li>Manejo correcto de bordes (no salir de la cuadrícula).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-03]</span>
+                    <span class="difficulty high">⭐⭐⭐ (Alto)</span>
+                </div>
+                <h4>Generación de Tabla de Transiciones y Alcanzabilidad (Opcional/Avanzado)</h4>
+                <p><strong>Asignado a:</strong> Dev 1 (Apoyo de Dev 2)</p>
+                <p class="description"><strong>Descripción:</strong> Siguiendo la "Ayuda" del documento, generar todos los estados posibles (permutaciones) y validar cuáles son alcanzables desde la solución usando BFS.</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Mapa/Grafo de estados válidos vs inválidos.</li>
+                        <li>Optimización para evitar explorar estados inalcanzables.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="epic">
+            <h3>Epic 2: Implementación del Agente (Q-Learning)</h3>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-04]</span>
+                    <span class="difficulty low">⭐ (Bajo)</span>
+                </div>
+                <h4>Implementación de la Tabla Q (Q-Table)</h4>
+                <p><strong>Asignado a:</strong> Dev 2</p>
+                <p class="description"><strong>Descripción:</strong> Crear la estructura de datos para la Tabla Q que mapee <code>(Estado, Acción) -> Valor</code>. Debe manejar la gran cantidad de estados posibles (362,880).</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Estructura eficiente (ej. Diccionario/Hash Map con el estado como key).</li>
+                        <li>Inicialización correcta de valores.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-05]</span>
+                    <span class="difficulty medium">⭐⭐ (Medio)</span>
+                </div>
+                <h4>Implementación de Política Epsilon-Greedy</h4>
+                <p><strong>Asignado a:</strong> Dev 2</p>
+                <p class="description"><strong>Descripción:</strong> Implementar la lógica de selección de acciones. Debe elegir una acción aleatoria con probabilidad <code>epsilon</code> (exploración) y la mejor acción conocida con probabilidad <code>1 - epsilon</code> (explotación).</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Función <code>choose_action(state)</code> funcional.</li>
+                        <li><code>epsilon</code> debe ser parametrizable.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-06]</span>
+                    <span class="difficulty high">⭐⭐⭐ (Alto)</span>
+                </div>
+                <h4>Implementación de la Ecuación de Actualización Q</h4>
+                <p><strong>Asignado a:</strong> Dev 2</p>
+                <p class="description"><strong>Descripción:</strong> Implementar la fórmula de actualización:<br>
+                <code>Q(s,a) = Q(s,a) + alpha * [r + gamma * max(Q(s',a')) - Q(s,a)]</code></p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Función <code>update(state, action, reward, next_state)</code> correcta.</li>
+                        <li>Uso correcto de <code>alpha</code> (tasa de aprendizaje) y <code>gamma</code> (factor de descuento).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-07]</span>
+                    <span class="difficulty low">⭐ (Bajo)</span>
+                </div>
+                <h4>Definición del Sistema de Recompensas</h4>
+                <p><strong>Asignado a:</strong> Dev 2 & Dev 3</p>
+                <p class="description"><strong>Descripción:</strong> Definir los valores de recompensa.</p>
+                <ul>
+                    <li>Recompensa negativa pequeña por cada paso (para incentivar rapidez).</li>
+                    <li>Gran recompensa positiva al llegar al estado objetivo.</li>
+                    <li>Penalización fuerte por movimientos inválidos (si aplica).</li>
+                </ul>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Función de recompensa configurada y probada.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="epic">
+            <h3>Epic 3: Entrenamiento y Optimización (Training)</h3>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-08]</span>
+                    <span class="difficulty medium">⭐⭐ (Medio)</span>
+                </div>
+                <h4>Bucle Principal de Entrenamiento</h4>
+                <p><strong>Asignado a:</strong> Dev 3</p>
+                <p class="description"><strong>Descripción:</strong> Crear el script principal que orqueste los episodios de entrenamiento. Reiniciar el entorno, ejecutar pasos hasta terminar o límite de pasos, y actualizar la Q-Table.</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Script ejecutable que corre N episodios.</li>
+                        <li>El agente aprende (los pasos para resolver disminuyen).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-09]</span>
+                    <span class="difficulty high">⭐⭐⭐ (Alto)</span>
+                </div>
+                <h4>Ajuste de Hiperparámetros (Tuning)</h4>
+                <p><strong>Asignado a:</strong> Dev 3</p>
+                <p class="description"><strong>Descripción:</strong> Experimentar con diferentes valores de <code>alpha</code>, <code>gamma</code> y estrategias de decaimiento de <code>epsilon</code>.</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Identificación de la mejor combinación de parámetros.</li>
+                        <li>Documentación de los experimentos realizados.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="epic">
+            <h3>Epic 4: Evaluación y Reporte (Analytics)</h3>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-10]</span>
+                    <span class="difficulty low">⭐ (Bajo)</span>
+                </div>
+                <h4>Sistema de Logging y Métricas</h4>
+                <p><strong>Asignado a:</strong> Dev 4</p>
+                <p class="description"><strong>Descripción:</strong> Implementar el registro de datos por episodio: número de pasos para resolver, recompensa total acumulada, éxito/fallo.</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Generación de logs (CSV o listas) durante el entrenamiento.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-11]</span>
+                    <span class="difficulty medium">⭐⭐ (Medio)</span>
+                </div>
+                <h4>Generación de Gráficas de Rendimiento</h4>
+                <p><strong>Asignado a:</strong> Dev 4</p>
+                <p class="description"><strong>Descripción:</strong> Crear scripts para visualizar la evolución del aprendizaje.</p>
+                <ul>
+                    <li>Gráfica: Pasos promedio vs Episodios.</li>
+                    <li>Gráfica: Tasa de éxito vs Tiempo.</li>
+                </ul>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Gráficas claras generadas con Matplotlib o similar.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task">
+                <div class="task-header">
+                    <span class="task-id">[TASK-12]</span>
+                    <span class="difficulty medium">⭐⭐ (Medio)</span>
+                </div>
+                <h4>Redacción del Informe y Documentación Final</h4>
+                <p><strong>Asignado a:</strong> Todo el Equipo (Liderado por Dev 4)</p>
+                <p class="description"><strong>Descripción:</strong> Compilar el código, las gráficas y el análisis en el informe final. Explicar decisiones de diseño y desafíos (como el espacio de estados).</p>
+                <div class="criteria">
+                    <strong>Criterios de Aceptación:</strong>
+                    <ul>
+                        <li>Informe completo según los requisitos de entrega del PDF.</li>
+                        <li>Código comentado y limpio.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('dragonCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Ajustar canvas al redimensionar
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        class Dragon {
+            constructor() {
+                this.x = -100;
+                this.y = canvas.height / 2;
+                this.size = 80;
+                this.speed = 0.5;
+                this.wingPhase = 0;
+                this.tailPhase = 0;
+                this.fireParticles = [];
+            }
+
+            update() {
+                this.x += this.speed;
+                this.wingPhase += 0.15;
+                this.tailPhase += 0.1;
+
+                // Generar partículas de fuego
+                if (Math.random() < 0.3) {
+                    this.fireParticles.push({
+                        x: this.x - 20,
+                        y: this.y + 10,
+                        vx: -2 - Math.random() * 2,
+                        vy: -1 + Math.random() * 2,
+                        life: 1.0,
+                        size: 5 + Math.random() * 8
+                    });
+                }
+
+                // Actualizar partículas
+                this.fireParticles = this.fireParticles.filter(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+                    p.size *= 0.98;
+                    return p.life > 0;
+                });
+
+                // Reiniciar posición cuando sale de pantalla
+                if (this.x > canvas.width + 100) {
+                    this.x = -100;
+                    this.y = Math.random() * canvas.height;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Cola del dragón
+                ctx.beginPath();
+                ctx.strokeStyle = '#ff4500';
+                ctx.lineWidth = 8;
+                ctx.moveTo(-this.size * 0.8, 0);
+                for (let i = 0; i < 5; i++) {
+                    const t = i / 5;
+                    const offset = Math.sin(this.tailPhase + t * 2) * 15;
+                    ctx.lineTo(-this.size * 0.8 + t * 30, offset);
+                }
+                ctx.stroke();
+
+                // Cuerpo del dragón
+                ctx.fillStyle = '#ff6347';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size * 0.6, this.size * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Alas
+                const wingOffset = Math.sin(this.wingPhase) * 20;
+                ctx.fillStyle = '#ff4500';
+                
+                // Ala izquierda
+                ctx.beginPath();
+                ctx.moveTo(-this.size * 0.3, -this.size * 0.2);
+                ctx.lineTo(-this.size * 0.6, -this.size * 0.5 - wingOffset);
+                ctx.lineTo(-this.size * 0.2, -this.size * 0.3);
+                ctx.closePath();
+                ctx.fill();
+
+                // Ala derecha
+                ctx.beginPath();
+                ctx.moveTo(-this.size * 0.3, this.size * 0.2);
+                ctx.lineTo(-this.size * 0.6, this.size * 0.5 + wingOffset);
+                ctx.lineTo(-this.size * 0.2, this.size * 0.3);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cabeza
+                ctx.fillStyle = '#ff4500';
+                ctx.beginPath();
+                ctx.ellipse(this.size * 0.4, 0, this.size * 0.3, this.size * 0.25, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ojos
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(this.size * 0.5, -this.size * 0.05, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.size * 0.5, this.size * 0.05, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Cuernos
+                ctx.strokeStyle = '#8b0000';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(this.size * 0.5, -this.size * 0.2);
+                ctx.lineTo(this.size * 0.6, -this.size * 0.35);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(this.size * 0.5, this.size * 0.2);
+                ctx.lineTo(this.size * 0.6, this.size * 0.35);
+                ctx.stroke();
+
+                ctx.restore();
+
+                // Dibujar fuego
+                this.fireParticles.forEach(p => {
+                    const alpha = p.life;
+                    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                    gradient.addColorStop(0, `rgba(255, 255, 0, ${alpha})`);
+                    gradient.addColorStop(0.5, `rgba(255, 100, 0, ${alpha * 0.8})`);
+                    gradient.addColorStop(1, `rgba(255, 0, 0, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        }
+
+        const dragon = new Dragon();
+
+        function animate() {
+            // Limpiar con fade para efecto de estela
+            ctx.fillStyle = 'rgba(10, 10, 30, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            dragon.update();
+            dragon.draw();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
+
