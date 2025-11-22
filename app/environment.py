@@ -1,5 +1,5 @@
+from typing import Tuple
 import numpy as np
-import random
 
 class EightPuzzle:
     """
@@ -7,27 +7,38 @@ class EightPuzzle:
     El estado se representa como una tupla de 9 elementos (aplanada).
     0 representa el espacio vacío.
     """
+    
+    # Definimos el estado objetivo como constante de clase
+    GOAL_STATE: Tuple[int, ...] = (1, 2, 3, 4, 5, 6, 7, 8, 0)
 
     def __init__(self):
-        # Definimos el estado objetivo: 1, 2, 3, 4, 5, 6, 7, 8, 0
-        self.goal_state = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+        self.state: Tuple[int, ...] = self.GOAL_STATE
         self.reset()
 
-    def reset(self):
+    def reset(self) -> Tuple[int, ...]:
         """
         Reinicia el entorno a un estado inicial.
         Por ahora, iniciamos en el estado objetivo.
+
+        Returns:
+            Tuple[int, ...]: El estado inicial del tablero.
         """
-        self.state = self.goal_state
+        self.state = self.GOAL_STATE
         return self.state
 
-    def is_goal(self, state):
+    def is_goal(self, state: Tuple[int, ...]) -> bool:
         """
         Comprueba si el estado dado es el estado objetivo.
-        """
-        return state == self.goal_state
 
-    def render(self):
+        Args:
+            state (Tuple[int, ...]): El estado a comprobar.
+
+        Returns:
+            bool: True si es el estado objetivo, False en caso contrario.
+        """
+        return state == self.GOAL_STATE
+
+    def render(self) -> None:
         """
         Imprime el estado actual del tablero en formato 3x3.
         """
@@ -44,4 +55,4 @@ if __name__ == "__main__":
     
     # Prueba con un estado falso
     fake_state = (1, 2, 3, 4, 5, 6, 7, 0, 8)
-    print(f"¿Es (1, 2, 3, 4, 5, 6, 7, 0, 8) objetivo? {env.is_goal(fake_state)}")
+    print(f"¿Es {fake_state} objetivo? {env.is_goal(fake_state)}")
