@@ -20,18 +20,50 @@ El problema del 8-puzzle consiste en una cuadrícula de 3x3 con 8 piezas numerad
 7 8
 ```
 
-### 2. Configuración del Entorno de Aprendizaje
+### 2. Configuración del Entorno (uv)
+
+Este proyecto utiliza `uv` para la gestión de dependencias, una alternativa moderna y rápida a pip.
+
+#### Instalación de uv
+
+**Windows (PowerShell):**
+```powershell
+irm https://astral.sh/uv/install.ps1 | iex
+```
+
+**Linux / WSL:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+#### Instalación de Dependencias
+
+Para instalar las dependencias del proyecto definidas en `pyproject.toml`:
+
+```bash
+uv sync
+```
+
+#### Ejecución
+
+Para ejecutar scripts utilizando el entorno virtual gestionado por `uv`:
+
+```bash
+uv run app/environment.py
+```
+
+### 3. Configuración del Entorno de Aprendizaje
 
 Implementa un entorno para el 8-puzzle donde el agente pueda mover las piezas en las cuatro direcciones posibles: arriba, abajo, izquierda y derecha. Asegúrate de definir las reglas de movimiento (es decir, que no puede moverse fuera de los límites de la cuadrícula) y de penalizar movimientos inválidos.
 
-### 3. Definición de Recompensas y Estados
+### 4. Definición de Recompensas y Estados
 
 - Cada estado es una configuración única del tablero
 - El objetivo del agente es llegar al estado objetivo
 - Asigna una recompensa negativa para cada paso para incentivar al agente a resolver el puzzle en el menor número de movimientos posible
 - Otorga una recompensa positiva significativa al alcanzar el estado objetivo
 
-### 4. Implementación del Algoritmo Q-Learning
+### 5. Implementación del Algoritmo Q-Learning
 
 - Implementa la tabla Q para almacenar las recompensas para cada acción en cada estado
 - Usa una política ε-greedy para equilibrar la exploración y explotación
@@ -47,19 +79,19 @@ donde:
 - `α` es la tasa de aprendizaje
 - `γ` es el factor de descuento
 
-### 5. Entrenamiento del Agente
+### 6. Entrenamiento del Agente
 
 - Entrena al agente con diferentes configuraciones iniciales del 8-puzzle
 - Ajusta los hiperparámetros (ε, α, γ) para optimizar el rendimiento
 - Registra el número de pasos que toma el agente para resolver el puzzle desde diferentes estados
 
-### 6. Evaluación y Análisis de Resultados
+### 7. Evaluación y Análisis de Resultados
 
 - Evalúa el rendimiento del agente en el 8-puzzle
 - Presenta gráficas que muestren cómo cambia la tasa de éxito y el número de pasos promedio para resolver el puzzle a lo largo del tiempo
 - Reflexiona sobre el impacto de cada hiperparámetro en el rendimiento del agente y su capacidad de generalización desde estados iniciales aleatorios
 
-### 7. Entrega
+### 8. Entrega
 
 - Código implementado con explicaciones de cada parte
 - Un informe que incluya:
