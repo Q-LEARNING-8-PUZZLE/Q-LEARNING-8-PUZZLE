@@ -1,14 +1,32 @@
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
+
+# Virtual environments
 venv/
 env/
-.venv
-.ipynb_checkpoints
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated data and logs
 results/
 logs/
-*.csv
-*.pkl
+data/*.pkl
+data/*.csv
+
+# IDE/Editor
 Q-Learning.code-workspace
+.vscode/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# UV lock (opcional, algunos lo versionan)
+# uv.lock
