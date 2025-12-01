@@ -10,6 +10,7 @@ from collections import defaultdict
 import random
 
 
+# TASK-04: Implementación de la Tabla Q (Q-Table)
 class QTable:
     """
     Tabla Q que mapea (Estado, Acción) -> Valor Q.
@@ -21,6 +22,7 @@ class QTable:
     Estructura: {(estado, acción): valor_q}
     """
     
+    # TASK-04: Constructor de la tabla Q
     def __init__(self, initial_value: float = 0.0):
         """
         Inicializa la Tabla Q.
@@ -36,6 +38,7 @@ class QTable:
         )
         self.initial_value = initial_value
     
+    # TASK-04: Método para obtener un valor Q de la tabla
     def get(self, state: Tuple[int, ...], action: int) -> float:
         """
         Obtiene el valor Q para un par (estado, acción).
@@ -49,6 +52,7 @@ class QTable:
         """
         return self._q_table[(state, action)]
     
+    # TASK-04: Método para establecer un valor Q en la tabla
     def set(self, state: Tuple[int, ...], action: int, value: float) -> None:
         """
         Establece el valor Q para un par (estado, acción).
@@ -60,6 +64,7 @@ class QTable:
         """
         self._q_table[(state, action)] = value
     
+    # TASK-04: Método auxiliar para obtener la mejor acción (usado en TASK-05 y TASK-06)
     def get_best_action(self, state: Tuple[int, ...], valid_actions: list[int]) -> Optional[int]:
         """
         Obtiene la mejor acción (con mayor valor Q) para un estado dado.
@@ -86,6 +91,7 @@ class QTable:
         
         return best_action
     
+    # TASK-04: Método auxiliar para obtener el máximo valor Q (usado en TASK-06)
     def get_max_q_value(self, state: Tuple[int, ...], valid_actions: list[int]) -> float:
         """
         Obtiene el máximo valor Q para un estado dado entre las acciones válidas.
@@ -108,6 +114,7 @@ class QTable:
         
         return max_value
     
+    # TASK-04: Método auxiliar para obtener el tamaño de la tabla
     def size(self) -> int:
         """
         Retorna el número de pares (estado, acción) almacenados en la tabla.
@@ -117,12 +124,14 @@ class QTable:
         """
         return len(self._q_table)
     
+    # TASK-04: Método auxiliar para limpiar la tabla
     def clear(self) -> None:
         """
         Limpia toda la tabla Q, eliminando todas las entradas.
         """
         self._q_table.clear()
     
+    # TASK-04: Método mágico para obtener el tamaño con len()
     def __len__(self) -> int:
         """
         Permite usar len(q_table) para obtener el tamaño.
@@ -132,6 +141,7 @@ class QTable:
         """
         return len(self._q_table)
     
+    # TASK-04: Método mágico para representación en string
     def __repr__(self) -> str:
         """
         Representación en string de la tabla Q.
@@ -142,6 +152,8 @@ class QTable:
         return f"QTable(size={len(self._q_table)}, initial_value={self.initial_value})"
 
 
+# TASK-05: Implementación de Política Epsilon-Greedy
+# TASK-06: Implementación de la Ecuación de Actualización Q
 class QLearningAgent:
     """
     Agente Q-Learning que implementa la política epsilon-greedy y la actualización Q.
@@ -150,6 +162,7 @@ class QLearningAgent:
     TASK-06: Implementación de la Ecuación de Actualización Q
     """
     
+    # TASK-05 y TASK-06: Constructor del agente (inicializa parámetros epsilon, alpha, gamma)
     def __init__(
         self,
         q_table: QTable,
@@ -174,6 +187,7 @@ class QLearningAgent:
         self.alpha = alpha
         self.gamma = gamma
     
+    # TASK-05: Implementación de la política epsilon-greedy para seleccionar acciones
     def choose_action(
         self,
         state: Tuple[int, ...],
@@ -215,6 +229,7 @@ class QLearningAgent:
         
         return random.choice(best_actions)
     
+    # TASK-06: Implementación de la ecuación de actualización Q-Learning
     def update(
         self,
         state: Tuple[int, ...],
@@ -260,6 +275,7 @@ class QLearningAgent:
         # Actualizar la tabla Q
         self.q_table.set(state, action, new_q_value)
     
+    # TASK-05: Método auxiliar para actualizar epsilon (útil para decaimiento)
     def set_epsilon(self, epsilon: float) -> None:
         """
         Actualiza el valor de epsilon (útil para decaimiento de epsilon durante el entrenamiento).
@@ -271,6 +287,7 @@ class QLearningAgent:
             raise ValueError("epsilon debe estar entre 0.0 y 1.0")
         self.epsilon = epsilon
     
+    # TASK-06: Método auxiliar para actualizar alpha (tasa de aprendizaje)
     def set_alpha(self, alpha: float) -> None:
         """
         Actualiza el valor de alpha (tasa de aprendizaje).
@@ -282,6 +299,7 @@ class QLearningAgent:
             raise ValueError("alpha debe estar entre 0.0 y 1.0")
         self.alpha = alpha
     
+    # TASK-06: Método auxiliar para actualizar gamma (factor de descuento)
     def set_gamma(self, gamma: float) -> None:
         """
         Actualiza el valor de gamma (factor de descuento).
@@ -294,7 +312,7 @@ class QLearningAgent:
         self.gamma = gamma
 
 
-# Bloque de prueba para TASK-05 y TASK-06
+# TASK-05 y TASK-06: Bloque de prueba para verificar la implementación
 if __name__ == "__main__":
     import sys
     from pathlib import Path
