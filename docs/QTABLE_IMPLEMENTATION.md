@@ -184,12 +184,13 @@ print(q_table)  # QTable(size=1234, initial_value=0.0)
 
 ### 1. Inicialización
 ```python
-from app.agent import QTable
+from app.agent import QTable, QLearningAgent
 
 q_table = QTable(initial_value=0.0)
+agent = QLearningAgent(q_table, epsilon=0.1, alpha=0.1, gamma=0.9)
 ```
 
-### 2. Durante el Entrenamiento
+### 2. Durante el Entrenamiento (Usando QLearningAgent)
 
 ```python
 # Paso 1: Obtener estado actual
@@ -198,24 +199,21 @@ state = env.state
 # Paso 2: Obtener acciones válidas
 valid_actions = env.get_valid_actions(state)
 
-# Paso 3: Elegir acción (epsilon-greedy)
-if random.random() < epsilon:
-    action = random.choice(valid_actions)  # Exploración
-else:
-    action = q_table.get_best_action(state, valid_actions)  # Explotación
+# Paso 3: Elegir acción usando epsilon-greedy (TASK-05)
+action = agent.choose_action(state, valid_actions)
 
 # Paso 4: Ejecutar acción y obtener recompensa
-next_state, reward, done = env.step(action)
+next_state, action_valid = env.step(action)
+reward = env.get_reward(next_state, action_valid)
 
-# Paso 5: Obtener máximo Q del siguiente estado
+# Paso 5: Obtener acciones válidas del siguiente estado
 next_valid_actions = env.get_valid_actions(next_state)
-max_next_q = q_table.get_max_q_value(next_state, next_valid_actions)
 
-# Paso 6: Actualizar valor Q
-current_q = q_table.get(state, action)
-new_q = current_q + alpha * (reward + gamma * max_next_q - current_q)
-q_table.set(state, action, new_q)
+# Paso 6: Actualizar Q usando la ecuación Q-Learning (TASK-06)
+agent.update(state, action, reward, next_state, next_valid_actions)
 ```
+
+**Nota**: Para uso manual sin `QLearningAgent`, ver la sección anterior. Sin embargo, se recomienda usar `QLearningAgent` para código más limpio y mantenible.
 
 ## ⚡ Optimizaciones y Consideraciones
 
@@ -317,8 +315,10 @@ print(f"Representación: {q_table}")
 
 ## 🔗 Relación con Otras Tareas
 
-- **TASK-05**: Implementación de Política Epsilon-Greedy (usa `get_best_action`)
-- **TASK-06**: Implementación de la Ecuación de Actualización Q (usa `get`, `set`, `get_max_q_value`)
+- **TASK-05**: ✅ Implementación de Política Epsilon-Greedy (usa `get_best_action`)
+  - Ver documentación completa en `docs/AGENT_IMPLEMENTATION.md`
+- **TASK-06**: ✅ Implementación de la Ecuación de Actualización Q (usa `get`, `set`, `get_max_q_value`)
+  - Ver documentación completa en `docs/AGENT_IMPLEMENTATION.md`
 - **TASK-03**: Generación de Tabla de Transiciones (provee estados alcanzables)
 
 ---
