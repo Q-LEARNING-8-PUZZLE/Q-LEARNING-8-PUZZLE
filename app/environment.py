@@ -12,16 +12,28 @@ class EightPuzzle:
     # Definimos el estado objetivo como constante de clase
     GOAL_STATE = (1, 2, 3, 4, 5, 6, 7, 8, 0)
 
-    def __init__(self, use_reachable_states: bool = False):
+    def __init__(self, 
+                 use_reachable_states: bool = False,
+                 reward_goal: float = 1000.0,
+                 reward_step: float = -1.0,
+                 reward_invalid: float = -100.0):
         """
         Inicializa el entorno del 8-Puzzle.
         
         Args:
             use_reachable_states (bool): Si es True, carga los estados alcanzables
                                         desde el archivo generado. Útil para validación.
+            reward_goal (float): Recompensa al alcanzar el estado objetivo (por defecto: 1000.0)
+            reward_step (float): Recompensa por cada paso normal (por defecto: -1.0)
+            reward_invalid (float): Penalización por movimiento inválido (por defecto: -100.0)
         """
         self.state = self.GOAL_STATE
         self.reachable_states = None
+        
+        # Configuración de recompensas (ahora parametrizable)
+        self.reward_goal = reward_goal
+        self.reward_step = reward_step
+        self.reward_invalid = reward_invalid
         
         # Cargar estados alcanzables si se solicita
         if use_reachable_states:
@@ -227,12 +239,13 @@ class EightPuzzle:
         
         return valid_actions
     
-    def step(self, action: int) -> Tuple[Tuple[int, ...], bool]:
+    def step(self, action: int, verbose: bool = False) -> Tuple[Tuple[int, ...], bool]:
         """
         Ejecuta una acción y devuelve el nuevo estado.
         
         Args:
             action (int): Acción a ejecutar (0=ARRIBA, 1=ABAJO, 2=IZQUIERDA, 3=DERECHA).
+            verbose (bool): Si es True, imprime información detallada del paso (por defecto: False).
         
         Returns:
             Tuple[Tuple[int, ...], bool]: (nuevo_estado, acción_válida)
@@ -244,11 +257,12 @@ class EightPuzzle:
         if action not in valid_actions:
             # Acción inválida, devolver el mismo estado
             reward = self.get_reward(self.state, False)
-            print(f"\n--- Paso Ejecutado (INVÁLIDO) ---")
-            print(f"Acción: {action} (Valid: False)")
-            print(f"Recompensa: {reward}")
-            print("Estado actual (sin cambios):")
-            self.render()
+            if verbose:
+                print(f"\n--- Paso Ejecutado (INVÁLIDO) ---")
+                print(f"Acción: {action} (Valid: False)")
+                print(f"Recompensa: {reward}")
+                print("Estado actual (sin cambios):")
+                self.render()
             return self.state, False
         
         # Obtener posición del espacio vacío
@@ -278,15 +292,14 @@ class EightPuzzle:
         # Actualizar el estado interno
         self.state = tuple(state_list)
         
-        # Calcular recompensa para mostrarla
-        reward = self.get_reward(self.state, True)
-        
-        # Visualización del paso (Solicitado por usuario)
-        print(f"\n--- Paso Ejecutado ---")
-        print(f"Acción: {action} (Valid: True)")
-        print(f"Recompensa: {reward}")
-        print("Estado actual:")
-        self.render()
+        # Calcular recompensa para mostrarla (si verbose está activado)
+        if verbose:
+            reward = self.get_reward(self.state, True)
+            print(f"\n--- Paso Ejecutado ---")
+            print(f"Acción: {action} (Valid: True)")
+            print(f"Recompensa: {reward}")
+            print("Estado actual:")
+            self.render()
         
         return self.state, True
     
@@ -337,21 +350,31 @@ class EightPuzzle:
         
         # Penalización fuerte por movimientos inválidos
         if not action_valid:
-            return -100.0
+            return self.reward_invalid
 
         # Gran recompensa positiva por llegar al estado objetivo
         if self.is_goal(state):
-            return 1000.0
+            return self.reward_goal
         
         # Recompensa negativa pequeña por cada paso (incentiva rapidez)
-        return -1.0
+        return self.reward_step
     
-    def render(self) -> None:
+    def render(self, return_string: bool = False) -> Optional[str]:
         """
-        Imprime el estado actual del tablero en formato 3x3.
+        Imprime o retorna el estado actual del tablero en formato 3x3.
+        
+        Args:
+            return_string (bool): Si es True, retorna la representación como string
+                                 en lugar de imprimirla (por defecto: False).
+        
+        Returns:
+            Optional[str]: String con la representación si return_string=True, None si no.
         """
         arr = np.array(self.state).reshape(3, 3)
+        if return_string:
+            return str(arr)
         print(arr)
+        return None
 
 # Bloque de prueba y demostración
 if __name__ == "__main__":
