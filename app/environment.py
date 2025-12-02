@@ -243,6 +243,12 @@ class EightPuzzle:
         valid_actions = self.get_valid_actions()
         if action not in valid_actions:
             # Acción inválida, devolver el mismo estado
+            reward = self.get_reward(self.state, False)
+            print(f"\n--- Paso Ejecutado (INVÁLIDO) ---")
+            print(f"Acción: {action} (Valid: False)")
+            print(f"Recompensa: {reward}")
+            print("Estado actual (sin cambios):")
+            self.render()
             return self.state, False
         
         # Obtener posición del espacio vacío
@@ -271,6 +277,16 @@ class EightPuzzle:
         
         # Actualizar el estado interno
         self.state = tuple(state_list)
+        
+        # Calcular recompensa para mostrarla
+        reward = self.get_reward(self.state, True)
+        
+        # Visualización del paso (Solicitado por usuario)
+        print(f"\n--- Paso Ejecutado ---")
+        print(f"Acción: {action} (Valid: True)")
+        print(f"Recompensa: {reward}")
+        print("Estado actual:")
+        self.render()
         
         return self.state, True
     
@@ -319,13 +335,13 @@ class EightPuzzle:
         if state is None:
             state = self.state
         
-        # Gran recompensa positiva por llegar al estado objetivo
-        if self.is_goal(state):
-            return 100.0
-        
         # Penalización fuerte por movimientos inválidos
         if not action_valid:
-            return -10.0
+            return -100.0
+
+        # Gran recompensa positiva por llegar al estado objetivo
+        if self.is_goal(state):
+            return 1000.0
         
         # Recompensa negativa pequeña por cada paso (incentiva rapidez)
         return -1.0
@@ -337,22 +353,299 @@ class EightPuzzle:
         arr = np.array(self.state).reshape(3, 3)
         print(arr)
 
-# Bloque de prueba simple (Solo Tarea 1)
+# Bloque de prueba y demostración
 if __name__ == "__main__":
-    env = EightPuzzle()
-    print("Estado inicial (Objetivo):")
-    env.render()
-
-    print(f"\n¿Es estado objetivo? {env.is_goal(env.state)}")
-
-    # Prueba con un estado falso
-    fake_state = (1, 2, 3, 4, 5, 6, 7, 0, 8)
-    print(f"¿Es {fake_state} objetivo? {env.is_goal(fake_state)}")
-    # TASK-03: Generación de estados alcanzables y grafo de transiciones
-    print("\n--- Generando estados alcanzables y grafo de transiciones (TASK-03) ---")
-    reachable_states, transitions_graph = env.generate_reachable_states_and_graph(verbose=True)
-    print(f"\nTotal de estados alcanzables generados: {len(reachable_states)}")
-    print(f"Ejemplo de transiciones para el estado objetivo:")
-    for action, next_state in transitions_graph[env.GOAL_STATE]:
-        print(f"Acción: {action} -> Estado: {next_state}")
+    from collections import deque
+    import csv
+    import os
     
+    print("="*60)
+    print("  DEMOSTRACIÓN DEL ENTORNO 8-PUZZLE")
+    print("="*60)
+    
+    # ===== PARTE 1: Generar todos los estados alcanzables =====
+    print("\n[PARTE 1] Generando estados alcanzables y grafo de transiciones")
+    print("-" * 60)
+    
+    env = EightPuzzle()
+    print("\n[*] Generando todos los estados alcanzables desde el estado objetivo...")
+    print("[*] Esto puede tomar unos minutos...")
+    
+    reachable_states, transitions_graph = env.generate_reachable_states_and_graph(verbose=True)
+    
+    print(f"\n[OK] Total de estados alcanzables: {len(reachable_states)}")
+    
+    # ===== PARTE 2: Exportar TODOS los estados a CSV =====
+    print("\n" + "="*60)
+    print("[PARTE 2] Exportando todos los estados alcanzables a CSV")
+    print("="*60)
+    
+    all_states_filename = "all_reachable_states.csv"
+    print(f"\n[*] Guardando todos los estados en {all_states_filename}...")
+    print("[*] Limpiando archivo anterior...")
+    
+    # Limpiar/sobrescribir el archivo
+    with open(all_states_filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Estado", "Es_Objetivo", "Acciones_Validas", "Num_Transiciones"])
+        
+        estado_count = 0
+        for estado in sorted(reachable_states):
+            is_goal = "Si" if estado == env.GOAL_STATE else "No"
+            valid_actions = env.get_valid_actions(estado)
+            num_transitions = len(valid_actions)
+            writer.writerow([str(estado), is_goal, str(valid_actions), num_transitions])
+            estado_count += 1
+            
+            if estado_count % 10000 == 0:
+                print(f"  Procesados: {estado_count}/{len(reachable_states)} estados...")
+    
+    print(f"[OK] Estados guardados: {len(reachable_states)} en {all_states_filename}")
+    
+    # ===== PARTE 3: Exportar TODAS las transiciones a CSV =====
+    print("\n" + "="*60)
+    print("[PARTE 3] Exportando todas las transiciones a CSV")
+    print("="*60)
+    
+    transitions_filename = "transition_table.csv"
+    print(f"\n[*] Guardando todas las transiciones en {transitions_filename}...")
+    print("[*] Limpiando archivo anterior...")
+    
+    # Limpiar/sobrescribir el archivo
+    with open(transitions_filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Estado_Origen", "Accion", "Estado_Destino", "Es_Objetivo"])
+        
+        transition_count = 0
+        for origin_state in sorted(reachable_states):
+            if origin_state in transitions_graph:
+                for action, dest_state in transitions_graph[origin_state]:
+                    is_goal = "Si" if dest_state == env.GOAL_STATE else "No"
+                    writer.writerow([str(origin_state), action, str(dest_state), is_goal])
+                    transition_count += 1
+                    
+                    if transition_count % 50000 == 0:
+                        print(f"  Procesadas: {transition_count} transiciones...")
+    
+    print(f"[OK] Transiciones guardadas: {transition_count} en {transitions_filename}")
+    
+    # ===== PARTE 3.5: Generar y exportar tabla de recompensas (R) =====
+    print("\n" + "="*60)
+    print("[PARTE 3.5] Generando tabla de recompensas (R)")
+    print("="*60)
+    
+    rewards_filename = "reward_table.csv"
+    print(f"\n[*] Generando tabla de recompensas en {rewards_filename}...")
+    print("[*] Limpiando archivo anterior...")
+    
+    # Generar ejemplos representativos de recompensas
+    # No generamos TODAS las combinaciones (sería 181440 * 2 = 362880 filas)
+    # En su lugar, generamos ejemplos representativos de cada tipo
+    
+    with open(rewards_filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            "Estado", 
+            "Accion_Valida", 
+            "Recompensa", 
+            "Es_Objetivo", 
+            "Tipo_Recompensa",
+            "Descripcion"
+        ])
+        
+        reward_count = 0
+        
+        # Tipo 1: Estado objetivo con acción válida (RECOMPENSA MÁXIMA)
+        goal_reward = env.get_reward(env.GOAL_STATE, action_valid=True)
+        writer.writerow([
+            str(env.GOAL_STATE),
+            "True",
+            goal_reward,
+            "Si",
+            "OBJETIVO_ALCANZADO",
+            "Recompensa maxima por llegar al estado objetivo"
+        ])
+        reward_count += 1
+        
+        # Tipo 2: Estado objetivo con acción inválida (PENALIZACIÓN)
+        invalid_goal_reward = env.get_reward(env.GOAL_STATE, action_valid=False)
+        writer.writerow([
+            str(env.GOAL_STATE),
+            "False",
+            invalid_goal_reward,
+            "Si",
+            "MOVIMIENTO_INVALIDO",
+            "Penalizacion por movimiento invalido (incluso en objetivo)"
+        ])
+        reward_count += 1
+        
+        # Tipo 3: Estados normales con acciones válidas (PASO NORMAL)
+        # Tomamos una muestra de estados para no saturar el CSV
+        sample_states = list(reachable_states)[:100]  # Primeros 100 estados como muestra
+        
+        for state in sample_states:
+            if state == env.GOAL_STATE:
+                continue  # Ya lo procesamos
+            
+            # Acción válida
+            normal_reward = env.get_reward(state, action_valid=True)
+            writer.writerow([
+                str(state),
+                "True",
+                normal_reward,
+                "No",
+                "PASO_NORMAL",
+                "Recompensa negativa pequena por cada paso (incentiva rapidez)"
+            ])
+            reward_count += 1
+            
+            # Acción inválida
+            invalid_reward = env.get_reward(state, action_valid=False)
+            writer.writerow([
+                str(state),
+                "False",
+                invalid_reward,
+                "No",
+                "MOVIMIENTO_INVALIDO",
+                "Penalizacion fuerte por movimiento invalido"
+            ])
+            reward_count += 1
+    
+    print(f"[OK] Tabla de recompensas guardada: {reward_count} ejemplos en {rewards_filename}")
+    print(f"\n[INFO] Estructura de recompensas:")
+    print(f"  - R(s, accion_valida=True) donde s=OBJETIVO: +{goal_reward}")
+    print(f"  - R(s, accion_valida=True) donde s!=OBJETIVO: {normal_reward}")
+    print(f"  - R(s, accion_valida=False): {invalid_reward}")
+    print(f"\n[INFO] Tipo de tabla: R(s, action_valid)")
+    print(f"  - Hibrido entre R(s) y R(s,a,s')")
+    print(f"  - Simplificacion valida: la recompensa depende del estado")
+    print(f"    y de si la accion es valida, no de la accion especifica")
+    
+    # ===== PARTE 4: Resolver un puzzle y guardar pasos en CSV =====
+    print("\n" + "="*60)
+    print("[PARTE 4] Resolviendo puzzle y guardando pasos en CSV")
+    print("="*60)
+    
+    # Generar un estado inicial aleatorio
+    print("\n[*] Generando estado inicial aleatorio (20 movimientos)...")
+    initial_state = env._generate_random_solvable_state(shuffles=20)
+    
+    print("\nEstado inicial:")
+    env.state = initial_state
+    env.render()
+    
+    print("\nEstado objetivo:")
+    env.state = env.GOAL_STATE
+    env.render()
+    
+    # Resolver usando BFS
+    print("\n[*] Buscando solución con BFS...")
+    
+    def solve_with_bfs(initial_state, env):
+        """Resuelve el puzzle usando BFS y retorna el camino."""
+        if env.is_goal(initial_state):
+            return []
+        
+        queue = deque([(initial_state, [])])
+        visited = {initial_state}
+        explored = 0
+        
+        while queue:
+            current_state, path = queue.popleft()
+            explored += 1
+            
+            valid_actions = env.get_valid_actions(current_state)
+            
+            for action in valid_actions:
+                next_state = env._simulate_action(current_state, action)
+                
+                if next_state in visited:
+                    continue
+                
+                visited.add(next_state)
+                new_path = path + [(action, next_state)]
+                
+                if env.is_goal(next_state):
+                    print(f"[OK] Solución encontrada! Estados explorados: {explored}")
+                    return new_path
+                
+                queue.append((next_state, new_path))
+        
+        return None
+    
+    solution = solve_with_bfs(initial_state, env)
+    
+    # Nombres de acciones
+    action_names = {
+        0: "ARRIBA",
+        1: "ABAJO", 
+        2: "IZQUIERDA",
+        3: "DERECHA"
+    }
+    
+    if solution:
+        print(f"\n[OK] Solución encontrada con {len(solution)} pasos")
+        
+        # Guardar solución en CSV
+        solution_filename = "puzzle_solution_steps.csv"
+        print(f"\n[*] Guardando pasos de la solución en {solution_filename}...")
+        print("[*] Limpiando archivo anterior...")
+        
+        # Limpiar/sobrescribir el archivo
+        with open(solution_filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Paso", "Accion", "Accion_Nombre", "Estado_Resultante", "Recompensa", "Es_Objetivo"])
+            
+            # Escribir estado inicial (paso 0)
+            writer.writerow([0, "N/A", "ESTADO_INICIAL", str(initial_state), 0.0, "No"])
+            
+            # Escribir cada paso de la solución
+            for i, (action, state) in enumerate(solution, 1):
+                reward = env.get_reward(state, action_valid=True)
+                is_goal = "Si" if env.is_goal(state) else "No"
+                writer.writerow([i, action, action_names[action], str(state), reward, is_goal])
+        
+        print(f"[OK] Pasos de solución guardados: {len(solution) + 1} filas en {solution_filename}")
+        
+        # Mostrar pasos en consola
+        print(f"\n{'#'*60}")
+        print(f"  SOLUCIÓN - {len(solution)} PASOS")
+        print(f"{'#'*60}")
+        
+        print("\nEstado inicial:")
+        env.state = initial_state
+        env.render()
+        
+        for i, (action, state) in enumerate(solution, 1):
+            print(f"\n{'='*60}")
+            print(f"  PASO {i}: {action_names[action]}")
+            print(f"{'='*60}")
+            
+            env.state = state
+            env.render()
+            
+            reward = env.get_reward(state, action_valid=True)
+            print(f"Recompensa: {reward:+.1f}")
+            
+            if env.is_goal(state):
+                print("\n[OK] PUZZLE RESUELTO!")
+    else:
+        print("\n[ERROR] No se encontró solución")
+    
+    # ===== RESUMEN FINAL =====
+    print(f"\n{'='*60}")
+    print("  RESUMEN FINAL")
+    print(f"{'='*60}")
+    print(f"  Estados alcanzables: {len(reachable_states)}")
+    print(f"  Transiciones totales: {transition_count}")
+    print(f"  Ejemplos de recompensas: {reward_count}")
+    if solution:
+        print(f"  Pasos de solución: {len(solution)}")
+    print(f"\n  Archivos generados (limpios):")
+    print(f"    1. {all_states_filename} ({len(reachable_states)} estados)")
+    print(f"    2. {transitions_filename} ({transition_count} transiciones)")
+    print(f"    3. {rewards_filename} ({reward_count} ejemplos de recompensas)")
+    if solution:
+        print(f"    4. {solution_filename} ({len(solution) + 1} pasos)")
+    print(f"{'='*60}\n")
+
