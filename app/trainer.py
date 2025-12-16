@@ -208,7 +208,12 @@ class Trainer:
             print("ENTRENAMIENTO COMPLETADO")
             print("=" * 80)
             self._print_training_summary()
-        
+        # Guardar logs de entrenamiento
+        log_filename = "data/training_log.csv"
+        self.analytics.to_csv(log_filename)
+        if self.verbose:
+            print(f"\n✓ Log de entrenamiento exportado a {log_filename}")
+
         return self._get_training_stats()
     
     def train_single_episode(
