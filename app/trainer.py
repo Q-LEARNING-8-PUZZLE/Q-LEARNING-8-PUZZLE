@@ -2,19 +2,21 @@
 Trainer - Dev 3
 TASK-08: Bucle Principal de Entrenamiento
 TASK-09: Ajuste de Hiperparámetros (Tuning)
+TASK-10: Registro de datos por episodio
 """
 
 import sys
 from pathlib import Path
 
-# Add project root to Python path to allow running this script directly
-if __name__ == "__main__":
-    project_root = Path(__file__).parent.parent
-    if str(project_root) not in sys.path:
-        sys.path.insert(0, str(project_root))
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 from typing import Tuple, List, Dict, Optional
 import time
+import csv
+import itertools
 from app.environment import EightPuzzle
 from app.agent import QLearningAgent, QTable
 from app.config import (
@@ -22,6 +24,7 @@ from app.config import (
     MAX_STEPS_PER_EPISODE, EPSILON_DECAY, EPSILON_MIN,
     REWARD_GOAL, REWARD_STEP, REWARD_INVALID
 )
+from app.analytics import Analytics
 
 
 class Trainer:
@@ -78,6 +81,9 @@ class Trainer:
         self.episode_steps: List[int] = []
         self.episode_success: List[bool] = []
         self.training_time: float = 0.0
+
+        # Analytics para logging de episodios
+        self.analytics = Analytics()
         
     def train(self) -> Dict:
         """
@@ -119,63 +125,66 @@ class Trainer:
         for episode in range(1, self.num_episodes + 1):
             # 1. Reiniciar el entorno a un estado inicial aleatorio
             state = self.env.reset(random_start=True, shuffles=50)
-            
+
             episode_reward = 0.0
             steps = 0
             done = False
-            
+
             # 2. Ejecutar pasos hasta terminar o alcanzar el límite
             while not done and steps < self.max_steps_per_episode:
                 # Obtener acciones válidas
                 valid_actions = self.env.get_valid_actions(state)
-                
+
                 if not valid_actions:
                     # No hay acciones válidas (caso extremo)
                     break
-                
+
                 # Seleccionar acción usando política epsilon-greedy
                 action = self.agent.choose_action(state, valid_actions)
-                
+
                 # Ejecutar acción en el entorno
                 next_state, action_valid = self.env.step(action, verbose=self.show_steps)
-                
+
                 # Obtener recompensa
                 reward = self.env.get_reward(next_state, action_valid)
                 episode_reward += reward
-                
+
                 # Verificar si llegamos al objetivo
                 done = self.env.is_goal(next_state)
-                
+
                 # 3. Actualizar la Q-Table
                 next_valid_actions = self.env.get_valid_actions(next_state)
                 self.agent.update(state, action, reward, next_state, next_valid_actions)
-                
+
                 # Actualizar estado
                 state = next_state
                 steps += 1
-            
+
             # Registrar métricas del episodio
             self.episode_rewards.append(episode_reward)
             self.episode_steps.append(steps)
             self.episode_success.append(done)
-            
+
+            # Registrar en Analytics (logging)
+            self.analytics.log_episode(episode=episode, steps=steps, total_reward=episode_reward, success=done)
+
             if done:
                 total_successes += 1
-            
+
             # Mantener ventana de episodios recientes para estadísticas
             recent_rewards.append(episode_reward)
             recent_steps.append(steps)
             recent_successes.append(done)
-            
+
             if len(recent_rewards) > self.log_interval:
                 recent_rewards.pop(0)
                 recent_steps.pop(0)
                 recent_successes.pop(0)
-            
+
             # 5. Aplicar decaimiento de epsilon
             if self.agent.epsilon > self.epsilon_min:
                 self.agent.set_epsilon(max(self.epsilon_min, self.agent.epsilon * self.epsilon_decay))
-            
+
             # Mostrar progreso
             if self.verbose and episode % self.log_interval == 0:
                 avg_reward = sum(recent_rewards) / len(recent_rewards)
@@ -488,23 +497,9 @@ def run_hyperparameter_experiment(
     base_params: Optional[Dict] = None,
     verbose: bool = False
 ) -> List[Dict]:
-    """
-    TASK-09: Ejecuta experimentos con diferentes combinaciones de hiperparámetros.
-    
-    Args:
-        param_grid (Dict): Diccionario con listas de valores para cada hiperparámetro.
-                          Ejemplo: {'alpha': [0.1, 0.2], 'gamma': [0.8, 0.9]}
-        base_params (Optional[Dict]): Parámetros base a usar (los no especificados en param_grid).
-        verbose (bool): Si True, imprime información detallada.
-    
-    Returns:
-        List[Dict]: Lista de resultados de cada experimento.
-    """
+    """TASK-09: Ejecuta experimentos con diferentes combinaciones de hiperparámetros."""
     if base_params is None:
         base_params = {}
-    
-    # Generar todas las combinaciones
-    import itertools
     
     param_names = list(param_grid.keys())
     param_values = list(param_grid.values())
@@ -530,3 +525,39 @@ def run_hyperparameter_experiment(
         results.append(result)
     
     return results
+
+
+# Bloque principal: Ejemplo de uso con exportación de logs
+if __name__ == "__main__":
+    print("\n" + "="*80)
+    print("EJEMPLO DE ENTRENAMIENTO Y LOGGING - TASK-10")
+    print("="*80 + "\n")
+    
+    # Configuración y creación del entrenador
+    env = EightPuzzle()
+    q_table = QTable(initial_value=0.0)
+    agent = QLearningAgent(q_table=q_table)
+    trainer = Trainer(environment=env, agent=agent, num_episodes=100, verbose=True)
+    
+    # Entrenar
+    trainer.train()
+
+    # Exportar log de episodios de entrenamiento a CSV (TASK-10)
+    trainer.analytics.to_csv("training_log.csv")
+    print("\n✓ Log de entrenamiento exportado a training_log.csv")
+
+    # Evaluación del agente y exportación de log de evaluación (TASK-10)
+    eval_stats = trainer.evaluate(num_episodes=50, shuffles=50, use_greedy=True)
+    
+    with open("evaluation_log.csv", mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["episode", "steps", "total_reward", "success"])
+        for i in range(len(eval_stats["rewards"])):
+            writer.writerow([
+                i + 1,
+                eval_stats["steps"][i],
+                eval_stats["rewards"][i],
+                eval_stats["successes"][i]
+            ])
+    
+    print("✓ Log de evaluación exportado a evaluation_log.csv\n")
