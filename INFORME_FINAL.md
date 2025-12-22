@@ -1,9 +1,8 @@
 
 # Informe Final: Agente Q-Learning para Resolver el 8-Puzzle
 
-**Fecha:** 16 de Diciembre de 2025
-**Autores:** Equipo de Desarrollo (Dev 1, Dev 2, Dev 3, Dev 4)
-**Líder de Análisis:** Dev 4
+**Fecha:** 22 de Diciembre de 2025
+**Autores:** Equipo de Desarrollo (Lucas Sánchez, Gabriel Henríquez, Carlos Rocholl, Carlos Ortega)
 
 ---
 
@@ -64,6 +63,14 @@ Los hiperparámetros clave utilizados fueron:
 - **Epsilon Inicial:** 1.0 (modificado en el código final a 0.1 para acelerar la convergencia una vez se vio que funcionaba)
 - **Decaimiento de Epsilon:** 0.995
 
+### 2.4. Visualización (Visualizer)
+
+Como mejora incremental y para facilitar la validación visual del aprendizaje, se implementó un sistema de visualización gráfica en `app/visualizer.py`.
+
+- **Monitor de Entrenamiento:** El visualizador permite observar en tiempo real cómo el agente intenta resolver el puzzle en diferentes etapas del entrenamiento.
+- **Renderizado de Imágenes:** A diferencia de una representación textual, el visualizador puede segmentar una imagen real (ej. `data/image-1.png`) en piezas que se mueven según el estado del tablero, proporcionando una interfaz intuitiva y atractiva para el usuario final.
+- **Demostración Final:** Al finalizar el entrenamiento, se ejecuta una demostración visual donde el agente resuelve un puzzle desordenado aleatoriamente, validando su capacidad de resolución de forma dinámica.
+
 ---
 
 ## 3. Resultados y Análisis
@@ -103,7 +110,7 @@ A continuación, se detalla cómo se abordó cada tarea del backlog del proyecto
   - **Solución:** La lógica reside en `app/environment.py`. El método `get_valid_actions()` determina qué movimientos son posibles desde un estado dado, y el método `step()` aplica una acción para devolver el nuevo estado. Se manejan los bordes del tablero para invalidar movimientos imposibles.
 
 - **[TASK-03] Generación de Estados Alcanzables (Opcional):**
-  - **Decisión:** Esta tarea se **omitió**. Aunque generar un grafo de todos los estados alcanzables podría haber optimizado la exploración, se decidió enfocar los esfuerzos en una implementación de Q-Learning más directa que pudiera aprender desde cualquier estado inicial aleatorio válido, lo cual es un enfoque más general y robusto para el aprendizaje por refuerzo.
+  - **Solución:** Esta tarea se **completó exitosamente**. Se implementó un algoritmo BFS en `app/environment.py` (`generate_reachable_states_and_graph`) capaz de generar el grafo completo de estados y transiciones. Además, se incluyó una optimización basada en **invariante de paridad** (`_is_solvable`) para detectar instantáneamente estados inalcanzables sin necesidad de búsqueda. Aunque el agente Q-Learning aprende dinámicamente, esta herramienta resultó valiosa para la validación del entorno y el análisis de complejidad.
 
 ### Epic 2: Implementación del Agente
 
@@ -136,13 +143,15 @@ A continuación, se detalla cómo se abordó cada tarea del backlog del proyecto
   - **Solución:** Se creó el script `app/plotter.py`, que contiene la clase `Plotter`. Este script lee el `training_log.csv` generado por la Tarea 10 y utiliza `pandas` para el procesamiento de datos y `matplotlib`/`seaborn` para la visualización. Genera las gráficas de pasos promedio y tasa de éxito, guardándolas en `data/plots/`. Se resolvió un problema de compatibilidad en entornos sin GUI estableciendo el backend de Matplotlib en `'Agg'`.
 
 - **[TASK-12] Redacción del Informe y Documentación Final:**
-  - **Solución:** Este mismo documento, `INFORME_FINAL.md`, constituye la entrega de esta tarea. Resume la metodología, los resultados y las decisiones de diseño del proyecto.
+  - **Solución:** Este mismo documento, `INFORME_FINAL.md`, constituye el comienzo de esta tarea. Resume la metodología, los resultados y las decisiones de diseño del proyecto.
 
 ---
 
 ## 5. Conclusión
 
-El proyecto ha sido un éxito. Se ha implementado con éxito un agente basado en Q-Learning capaz de aprender a resolver el 8-Puzzle desde cero. Las gráficas de rendimiento demuestran un aprendizaje claro y consistente, validando nuestro enfoque de diseño. La estructura modular del código, con responsabilidades bien definidas (entorno, agente, entrenador, analítica), ha facilitado el desarrollo, la depuración y la extensibilidad del proyecto.
+El proyecto ha sido un éxito. Se ha implementado con éxito un agente basado en Q-Learning capaz de aprender a resolver el 8-Puzzle desde cero. Las gráficas de rendimiento demuestran un aprendizaje claro y consistente, validando nuestro enfoque de diseño.
+
+La estructura modular del código, con responsabilidades bien definidas (entorno, agente, entrenador, analítica y visualización), ha facilitado el desarrollo, la depuración y la extensibilidad del proyecto.
 
 ### 5.1. Futuras Mejoras
 

@@ -3,7 +3,7 @@ Plotter - Dev 4
 TASK-11: Generación de Gráficas de Rendimiento
 """
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg') # Comentado para permitir visualización interactiva si es posible
 
 import pandas as pd
 import matplotlib.pyplot as plt

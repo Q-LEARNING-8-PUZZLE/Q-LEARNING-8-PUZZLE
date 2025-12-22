@@ -15,7 +15,7 @@ Si no tienes `uv`, instálalo con uno de los siguientes comandos:
 
 - **Windows (PowerShell):**
   ```powershell
-  irm https://astral.sh/uv/install.ps1 | iex
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
   ```
 - **Linux, macOS o WSL:**
   ```bash
@@ -42,7 +42,10 @@ Para entrenar al agente, ejecuta el script principal `main.py`. Este script se e
 
 ```bash
 # Activa el entorno virtual
+# En Linux/macOS/WSL:
 source .venv/bin/activate
+# En Windows (PowerShell):
+# .venv\Scripts\activate
 
 # Ejecuta el script principal
 python main.py
@@ -90,20 +93,3 @@ Estado Objetivo:
   ```
   - `α` (alpha): Tasa de aprendizaje.
   - `γ` (gamma): Factor de descuento.
-
----
-
-## Mejoras Recientes
-
-**Fecha de implementación:** 2 de diciembre de 2025
-
-Se han añadido mejoras de configurabilidad y flexibilidad en el entorno:
-
-- **Recompensas Configurables**: Permite ajustar las recompensas `reward_goal`, `reward_step` y `reward_invalid` desde la configuración.
-- **Parámetro `verbose`**: Controla los mensajes de depuración durante la ejecución del agente.
-- **Parámetro `return_string`**: Permite capturar el estado del tablero como un string para logging.
-
-Para más detalles, consulta el script de ejemplos:
-```bash
-uv run python tests/examples_usage.py
-```

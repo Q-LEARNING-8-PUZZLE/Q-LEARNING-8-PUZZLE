@@ -50,7 +50,8 @@ class Trainer:
         epsilon_min: float = EPSILON_MIN,
         verbose: bool = True,
         log_interval: int = 100,
-        show_steps: bool = False
+        show_steps: bool = False,
+        visualizer = None
     ):
         """
         Inicializa el entrenador.
@@ -65,6 +66,7 @@ class Trainer:
             verbose (bool): Si True, imprime información durante el entrenamiento.
             log_interval (int): Intervalo de episodios para mostrar estadísticas.
             show_steps (bool): Si True, muestra cada paso individual del entorno.
+            visualizer: Objeto PuzzleVisualizer opcional para actualizaciones visuales.
         """
         self.env = environment
         self.agent = agent
@@ -74,7 +76,8 @@ class Trainer:
         self.epsilon_min = epsilon_min
         self.verbose = verbose
         self.log_interval = log_interval
-        self.show_steps = show_steps  # Controla si se muestran los pasos individuales
+        self.show_steps = show_steps
+        self.visualizer = visualizer
         
         # Métricas de entrenamiento
         self.episode_rewards: List[float] = []
@@ -88,17 +91,6 @@ class Trainer:
     def train(self) -> Dict:
         """
         TASK-08: Bucle principal de entrenamiento.
-        
-        Ejecuta el entrenamiento completo del agente durante num_episodes episodios.
-        En cada episodio:
-        1. Reinicia el entorno a un estado inicial aleatorio
-        2. Ejecuta pasos hasta resolver el puzzle o alcanzar el límite
-        3. Actualiza la Q-Table después de cada acción
-        4. Registra métricas de rendimiento
-        5. Aplica decaimiento de epsilon
-        
-        Returns:
-            Dict: Diccionario con estadísticas del entrenamiento.
         """
         if self.verbose:
             print("=" * 80)
@@ -111,6 +103,8 @@ class Trainer:
             print(f"Epsilon inicial: {self.agent.epsilon}")
             print(f"Epsilon decay: {self.epsilon_decay}")
             print(f"Epsilon mínimo: {self.epsilon_min}")
+            if self.visualizer:
+                print("Modo Visual: Activado (Actualización periódica)")
             print("=" * 80)
             print()
         
@@ -185,19 +179,25 @@ class Trainer:
             if self.agent.epsilon > self.epsilon_min:
                 self.agent.set_epsilon(max(self.epsilon_min, self.agent.epsilon * self.epsilon_decay))
 
-            # Mostrar progreso
-            if self.verbose and episode % self.log_interval == 0:
+            # Mostrar progreso y VISUALIZAR
+            if episode % self.log_interval == 0:
                 avg_reward = sum(recent_rewards) / len(recent_rewards)
                 avg_steps = sum(recent_steps) / len(recent_steps)
                 success_rate = sum(recent_successes) / len(recent_successes) * 100
                 
-                print(f"Episodio {episode}/{self.num_episodes} | "
-                      f"Epsilon: {self.agent.epsilon:.4f} | "
-                      f"Éxitos totales: {total_successes} | "
-                      f"Tasa de éxito (últimos {self.log_interval}): {success_rate:.1f}% | "
-                      f"Pasos promedio: {avg_steps:.1f} | "
-                      f"Recompensa promedio: {avg_reward:.1f} | "
-                      f"Tamaño Q-Table: {len(self.agent.q_table)}")
+                if self.verbose:
+                    print(f"Episodio {episode}/{self.num_episodes} | "
+                          f"Epsilon: {self.agent.epsilon:.4f} | "
+                          f"Éxitos totales: {total_successes} | "
+                          f"Tasa de éxito (últimos {self.log_interval}): {success_rate:.1f}% | "
+                          f"Pasos promedio: {avg_steps:.1f} | "
+                          f"Recompensa promedio: {avg_reward:.1f} | "
+                          f"Tamaño Q-Table: {len(self.agent.q_table)}")
+                
+                # ACTUALIZACIÓN VISUAL: Demostrar lo aprendido hasta ahora
+                if self.visualizer:
+                    self._run_visual_validation(episode)
+
         
         self.training_time = time.time() - start_time
         
@@ -216,6 +216,45 @@ class Trainer:
 
         return self._get_training_stats()
     
+    def _run_visual_validation(self, episode_num: int):
+        """
+        Ejecuta un breve episodio de validación visual para mostrar el progreso.
+        """
+        # Guardar estado actual del entorno para no romper el flujo principal
+        # (Aunque el entorno se resetea al inicio del bucle, es buena práctica)
+        
+        # Usamos política greedy para mostrar "lo que sabe"
+        original_epsilon = self.agent.epsilon
+        self.agent.set_epsilon(0.0)
+        
+        # Generar un estado de prueba (no muy difícil para que sea rápido de ver)
+        val_state = self.env.reset(random_start=True, shuffles=15)
+        self.visualizer.update(val_state, f"Entrenando... Ep {episode_num} (Validación)")
+        
+        # Ejecutar unos pocos pasos para ver si sabe resolverlo
+        val_steps = 0
+        val_done = False
+        max_val_steps = 20 # Limitado para no ralentizar mucho el entrenamiento
+        
+        while not val_done and val_steps < max_val_steps:
+            valid_actions = self.env.get_valid_actions(val_state)
+            if not valid_actions:
+                break
+            
+            action = self.agent.choose_action(val_state, valid_actions)
+            next_state, _ = self.env.step(action)
+            
+            self.visualizer.update(next_state, f"Entrenando... Ep {episode_num} | Paso {val_steps+1}")
+            
+            val_state = next_state
+            val_done = self.env.is_goal(val_state)
+            val_steps += 1
+            
+            # Pequeña pausa ya incluida en visualizer.update, pero podemos ajustarla si es lento
+            
+        # Restaurar epsilon
+        self.agent.set_epsilon(original_epsilon)
+
     def train_single_episode(
         self,
         random_start: bool = True,
@@ -518,7 +557,7 @@ def run_hyperparameter_experiment(
         if verbose:
             print(f"\n{'='*80}")
             print(f"Experimentando con: {params}")
-            print(f"{'='*80}")
+            print(f"{ '='*80}")
         
         trainer = create_trainer_with_params(**params, verbose=verbose)
         stats = trainer.train()

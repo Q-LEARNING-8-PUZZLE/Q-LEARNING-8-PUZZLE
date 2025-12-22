@@ -17,10 +17,6 @@ env/
 results/
 logs/
 data/*.pkl
-data/*.csv
-
-# CSV files
-*.csv
 
 # IDE/Editor
 Q-Learning.code-workspace
